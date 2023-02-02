@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf"
+	xmlns:a="http://xmlns.jcp.org/jsf/passthrough"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+<ui:include src="includes/header.xhtml"></ui:include>
+
+
+
+<style type="text/css">
+/*
+https://stackoverflow.com/questions/43139828/how-to-change-z-index-for-primefaces-growl-component
+*/
+.ui-growl {
+	z-index: 9999 !important;
+}
+</style>
+<body class="hold-transition skin-blue sidebar-mini">
+	<h:outputStylesheet
+		name="bower_components/select2/dist/css/select2.min.css" />
+	<div class="wrapper">
+
+		<ui:include src="includes/top.xhtml"></ui:include>
+
+		<!-- Content Wrapper. Contains page content -->
+		<div class="content-wrapper">
+			<p:messages id="messages"></p:messages>
+			<p:growl id="growl"></p:growl>
+			<!-- Content Header (Page header) -->
+			<section class="content-header">
+				<h1>Commission Person Portfolio</h1>
+			</section>
+
+			<!-- Main content -->
+			<section class="content">
+				<div class="row">
+					<div class="col-xs-12">
+						<!-- /.box -->
+						<div class="box">
+							<!-- /.box-header -->
+							<div class="box-body">
+								<h:form role="form" id="inputForm">
+									<div class="box-body">								
+											<div class="col-md-3">
+												<div class="form-group">
+												<h:outputLabel for="compCode" value="Company Code" />
+													<h:selectOneMenu styleClass="form-control" filter="true" filterMatchMode="contains"
+														value="#{commissionPersonPortfolioBean.companyCode}" id="compCode">
+														<p:ajax event="change" listener="#{commissionPersonPortfolioBean.onCompanyCodeChange}" 
+														update="personName portfolioCode"/> 													
+														<f:selectItem itemLabel="ALL" itemValue="ALL" />
+														<f:selectItems value="#{companyBean.companies}"
+															var="compCode" itemLabel="#{compCode.label}"
+															itemValue="#{compCode.value}" />															
+													</h:selectOneMenu>
+												</div>
+											</div>	
+											
+												<div class="col-md-3">
+												<div class="form-group">
+												<h:outputLabel for="personName" value="Commission Person" />
+													<p:selectOneMenu styleClass="form-control" filter="true" filterMatchMode="contains" style="padding:0px;"
+														value="#{commissionPersonPortfolioBean.commissionPersonPortfolio.personName}" id="personName">													
+														<f:selectItem itemLabel=" " itemValue="" />
+														<f:selectItems value="#{commissionPersonPortfolioBean.initActiveUsersPortfolioList()}"
+															var="res" itemLabel="#{res.name}"
+														itemValue="#{res.userId}" />															
+													</p:selectOneMenu>
+												</div>
+											</div>	
+											
+											<div class="col-md-3">
+												<div class="form-group">
+												<h:outputLabel for="portfolioCode" value="Portfolio" />
+												<p:selectOneMenu styleClass="form-control" filter="true" filterMatchMode="contains" style="padding:0px;"
+														value="#{commissionPersonPortfolioBean.commissionPersonPortfolio.portfolioCode}" id="portfolioCode">														
+														<f:selectItem itemLabel=" " itemValue=""  />
+														<f:selectItems value="#{commissionPersonPortfolioBean.getAllPortfolios(commissionPersonPortfolioBean.companyCode)}" var="portfolioCode" itemLabel="#{portfolioCode.label}"
+														itemValue="#{portfolioCode.value}" />														
+													</p:selectOneMenu>
+												</div>
+											</div> 																
+
+											<div class="col-sm-3 control-label" style="margin-top:25px;">
+												<p:commandButton value="Save"													
+													id="saveButton" update="growl :dataTableForm personName portfolioCode"
+													icon="fa fa-check"  
+													actionListener="#{commissionPersonPortfolioBean.save}"
+													styleClass="btn btn-sm btn-primary" validateClient="true" >													
+												</p:commandButton>
+											
+												<h:outputText value="&#160;" />
+
+												<p:commandButton value="Clear" id="btnClear"
+													styleClass="btn btn-default btn-sm" icon="fa fa-refresh"
+													actionListener="#{commissionPersonPortfolioBean.clearInputForm}"
+													immediate="true" partialSubmit="true" update=":inputForm"
+													process="@this">
+													<f:ajax execute="@this"></f:ajax>
+												</p:commandButton>
+											</div>								
+									</div>
+								</h:form>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+				<!-- TOOLBAR NAV -->
+				<nav class="navbar navbar-default">
+					<div class="container-fluid">
+						<div class="nav navbar-nav navbar-left">
+							<button type="button" title="Find"
+								class="btn btn-sm btn-default navbar-btn" data-toggle="collapse"
+								data-target="div#filterCollapsible" aria-expanded="false">
+								<i class="glyphicon glyphicon-search"></i> <span>Find</span>
+							</button>
+						</div>
+					</div>
+				</nav>
+
+				<!-- FILTER -->
+				<div id="filterCollapsible" class="collapse">
+					<h:form id="filterForm">
+						<div class="panel panel-default" role="tabpanel"
+							aria-labelledby="filterHeading">
+							<div class="panel-body">
+								<div class="row">
+
+									<div class="col-xs-4">
+										<div class="form-group">
+											<h:outputLabel for="personNameSearch" value="Person Name Or Portfolio Code" />
+											<h:inputText id="personNameSearch"
+												styleClass="form-control"
+												value="#{commissionPersonPortfolioBean.searchString}" />
+										</div>
+									</div>
+									<div class="col-xs-4">
+										<div class="form-group">
+											<h:outputLabel for="companyCodeSearch" value="Company Code" />
+											<h:selectOneMenu id="compCode"
+													styleClass="form-control"
+													value="#{commissionPersonPortfolioBean.companyCode}">
+													<f:selectItem itemLabel="ALL" itemValue="ALL" />
+													<f:selectItems
+														value="#{companyBean.getCompanies()}"
+														var="compCode" itemLabel="#{compCode.label}"
+														itemValue="#{compCode.value}" />
+												</h:selectOneMenu>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<button jsf:id="doFilterButton" type="submit"
+											class="btn btn-sm btn-primary">
+											<i class="glyphicon glyphicon-filter"></i> <span>Filter</span>
+											<f:ajax event="click"
+												listener="#{commissionPersonPortfolioBean.filter}"
+												execute="@form" render="dataTableForm:crudDataTable" />
+										</button>
+										<h:outputText value="&#160;" />
+										<button jsf:id="eraseFilterButton" type="submit"
+											class="btn btn-sm btn-warning">
+											<i class="glyphicon glyphicon-erase"></i> <span>Erase</span>
+											<f:ajax event="click"
+												listener="#{commissionPersonPortfolioBean.eraseFilter}"
+												execute="@form"
+												render=":filterForm dataTableForm:crudDataTable" />
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</h:form>
+				</div>
+
+
+				<div class="row">
+					<div class="col-xs-12">
+						<!-- /.box -->
+
+						<div class="box">
+
+							<!-- /.box-header -->
+							<div class="box-body">
+								<h:form role="form" id="dataTableForm"
+									onkeypress="if(event.keyCode == 13){event.preventDefault();PF('dataTable').filter(); return;}">
+									<p:dataTable id="crudDataTable"
+										value="#{commissionPersonPortfolioBean.list}" var="x" rows="10"
+										paginator="true"
+										paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+										rowsPerPageTemplate="10,20,50,100" scrollable="false"
+										scrollHeight="350" scrollWidth="100%" widgetVar="dataTable"
+										emptyMessage="No data found with given criteria"
+										filteredValue="#{commissionPersonPortfolioBean.filteredList}">
+
+										<f:facet name="header">
+											<p:outputPanel>
+												<h:outputText value="Search all fields:" />
+												<p:inputText id="globalFilter"
+													onchange="PF('dataTable').filter()" style="width:150px"
+													placeholder="Enter keyword" />
+											</p:outputPanel>
+										</f:facet>
+										
+										<p:column width="250">
+											<f:facet name="header">
+												<h:outputText value="Actions" />
+											</f:facet>
+											<div align="center">
+												<p:link id="modifyButton" outcome="modify-commission-person-portfolio"
+													value="Modify" styleClass="btn btn-xs bg-navy">
+													<f:param name="userId" value="#{x.id.userId}" />
+													<f:param name="action" value="Modify" />
+												</p:link>
+																						
+												<h:outputText value=" " />												
+												<p:commandButton id="activateButton" value="Activate"
+													styleClass="btn btn-xs bg-olive active"
+													style="height: 24px;margin-bottom: 0px;"
+													rendered="#{x.status == 0}"
+													actionListener="#{commissionPersonPortfolioBean.changeStatus}"
+													update="crudDataTable">
+													<f:param name="personName" value="#{x.personName}" />
+													<f:param name="status" value="#{x.status}" />
+													<f:param name="updatedBy" value="#{x.id.userId}" />
+												</p:commandButton>
+
+												<p:commandButton id="deActivatButton" value="De Activate"
+													styleClass="btn btn-xs bg-red active"
+													style="height: 24px;margin-bottom: 0px;"
+													rendered="#{x.status == 1}"
+													actionListener="#{commissionPersonPortfolioBean.changeStatus}"
+													update="crudDataTable">
+													<f:param name="personName" value="#{x.personName}" />
+													<f:param name="status" value="#{x.status}" />
+													<f:param name="updatedBy" value="#{x.id.userId}" />
+												</p:commandButton>
+
+											</div>
+										</p:column>
+										
+
+										<p:column width="200" filterStyle="display:none"
+											filterBy="#{x.personName}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Person Name" />
+											</f:facet>
+											<h:outputText value="#{x.personName}" />
+										</p:column>
+
+										<p:column width="200" filterStyle="display:none"
+											filterBy="#{x.id.userId}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="User Id" />
+											</f:facet>
+											<h:outputText value="#{x.id.userId}" />
+										</p:column>
+
+										<p:column width="150" filterStyle="display:none"
+											filterBy="#{x.adpCode}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="ADP Code" />
+											</f:facet>
+											<h:outputText value="#{x.adpCode}" />
+										</p:column>
+										
+										<p:column width="150" filterStyle="display:none"
+											filterBy="#{x.portfolioCode}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Portfolio Code" />
+											</f:facet>
+											<h:outputText value="#{x.portfolioCode}" />
+										</p:column>
+										
+										<p:column width="150" filterStyle="display:none"
+											filterBy="#{x.portfolioDescription}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Portfolio Description" />
+											</f:facet>
+											<h:outputText value="#{x.portfolioDescription}" />
+										</p:column>
+
+										<p:column width="200" filterStyle="display:none"
+											filterBy="#{x.updatedDate}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Updated Date" />
+											</f:facet>
+											<h:outputText value="#{x.updatedDate}" />
+										</p:column>
+																				
+										<p:column width="200" filterStyle="display:none"
+											filterBy="#{x.updatedBy}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Updated By" />
+											</f:facet>
+											<h:outputText value="#{x.updatedBy}" />
+										</p:column>
+										
+										<p:column width="200" filterStyle="display:none"
+											filterBy="#{x.companyCode}" filterMatchMode="contains">
+											<f:facet name="header">
+												<h:outputText value="Company Code" />
+											</f:facet>
+											<h:outputText value="#{x.companyCode}" />
+										</p:column>
+
+										
+									</p:dataTable>
+
+								</h:form>
+
+							</div>
+							<!-- /.box-body -->
+						</div>
+						<!-- /.box -->
+					</div>
+					<!-- /.col -->
+				</div>
+				<!-- /.row -->
+			</section>			
+		</div>
+		<!-- /.content-wrapper -->
+		<footer class="main-footer">
+			<ui:include src="includes/footer.xhtml" />
+		</footer>
+
+		<!-- Control Sidebar -->
+		<ui:include src="includes/side-navigation.xhtml"></ui:include>
+		<!-- /.control-sidebar -->
+		<!-- Add the sidebar's background. This div must be placed
+       immediately after the control sidebar -->
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- ./wrapper -->
+
+	<ui:include src="includes/scripts.xhtml"></ui:include>
+</body>
+
+</html>
